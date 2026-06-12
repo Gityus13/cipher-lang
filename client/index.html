@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CipherLang</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#020c05;--bg2:#050f07;--bg3:#08160a;--panel:#0a1e0d;
+  --border:#0d3015;--green:#00ff6e;--g2:#00cc57;--g3:#007a35;
+  --dim:#143520;--text:#b8f0cc;--t2:#5dc478;--amber:#ffb800;
+  --red:#ff3355;--cyan:#00e5ff;--purple:#b066ff;
+  --mono:'Share Tech Mono',monospace;--disp:'Orbitron',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);overflow-x:hidden;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,110,.012) 2px,rgba(0,255,110,.012) 4px);pointer-events:none;z-index:999}
+
+/* ── header ── */
+header{position:sticky;top:0;z-index:50;padding:12px 28px;border-bottom:1px solid var(--border);background:rgba(2,12,5,.97);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.logo{font-family:var(--disp);font-weight:900;font-size:1.1rem;letter-spacing:.2em;color:var(--green);text-shadow:0 0 18px rgba(0,255,110,.45);white-space:nowrap}
+.logo span{color:var(--t2);font-weight:400}
+.hbar{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--g3);box-shadow:0 0 6px var(--g3)}
+.sdot.on{background:var(--green);box-shadow:0 0 10px var(--green);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+.hstat{font-size:.65rem;letter-spacing:.12em;color:var(--t2)}
+.btn-sm{background:none;border:1px solid var(--border);color:var(--t2);font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;padding:5px 12px;cursor:pointer;transition:all .18s;border-radius:2px}
+.btn-sm:hover{border-color:var(--g3);color:var(--green)}
+.btn-sm.danger{border-color:#441020;color:var(--red)}
+.btn-sm.danger:hover{background:rgba(255,51,85,.08);border-color:var(--red)}
+
+/* ── layout ── */
+.app{max-width:1080px;margin:0 auto;padding:28px 18px}
+
+/* ── auth ── */
+#vAuth{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:80vh;gap:20px}
+.auth-hero{text-align:center}
+.auth-hero h1{font-family:var(--disp);font-size:clamp(1.6rem,5vw,2.6rem);color:var(--green);text-shadow:0 0 40px rgba(0,255,110,.4);letter-spacing:.25em}
+.auth-hero p{font-size:.72rem;color:var(--t2);letter-spacing:.2em;margin-top:8px}
+.auth-box{background:var(--bg2);border:1px solid var(--border);padding:32px 28px;width:100%;max-width:400px;position:relative}
+.auth-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--green),transparent)}
+.auth-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:22px}
+.atab{flex:1;background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;padding:9px;font-family:var(--mono);font-size:.75rem;letter-spacing:.18em;color:var(--t2);cursor:pointer;transition:all .18s}
+.atab.on{color:var(--green);border-bottom-color:var(--green)}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:.65rem;letter-spacing:.15em;color:var(--t2);margin-bottom:5px}
+.field input{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:.88rem;padding:9px 13px;outline:none;border-radius:2px;transition:border-color .18s}
+.field input:focus{border-color:var(--g3)}
+.btn{display:block;width:100%;padding:11px;background:var(--bg3);border:1px solid var(--g3);color:var(--green);font-family:var(--disp);font-size:.72rem;letter-spacing:.2em;cursor:pointer;border-radius:2px;transition:all .18s;margin-top:6px;text-align:center}
+.btn:hover{background:var(--dim);border-color:var(--green);box-shadow:0 0 18px rgba(0,255,110,.12)}
+.btn:active{transform:scale(.98)}
+.btn.red{border-color:#441020;color:var(--red)}
+.btn.red:hover{background:rgba(255,51,85,.1);border-color:var(--red)}
+.auth-err{color:var(--red);font-size:.72rem;text-align:center;margin-top:10px;min-height:1.1em}
+
+/* ── main tabs ── */
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:22px;overflow-x:auto}
+.tab{background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;padding:10px 18px;font-family:var(--mono);font-size:.75rem;letter-spacing:.14em;color:var(--t2);cursor:pointer;transition:all .18s;white-space:nowrap}
+.tab.on{color:var(--green);border-bottom-color:var(--green)}
+.tcontent{display:none}.tcontent.on{display:block}
+
+/* ── panels ── */
+.panel{background:var(--bg2);border:1px solid var(--border);padding:22px;position:relative;margin-bottom:18px}
+.panel::before{content:'';position:absolute;top:0;left:0;width:36px;height:2px;background:var(--green);transition:width .35s}
+.panel:hover::before{width:100%}
+.ptitle{font-family:var(--disp);font-size:.7rem;letter-spacing:.22em;color:var(--t2);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.ptitle .ic{color:var(--green)}
+.plabel{font-size:.62rem;letter-spacing:.16em;color:var(--g3);margin-bottom:8px}
+
+/* ── inputs ── */
+textarea{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:.83rem;padding:12px;resize:vertical;outline:none;border-radius:2px;transition:border-color .18s;min-height:110px;line-height:1.6}
+textarea:focus{border-color:var(--g3)}
+textarea.cipher{color:var(--g2);font-size:.72rem;letter-spacing:.04em;word-break:break-all;min-height:140px}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;align-items:center}
+.row .btn{width:auto;flex:1;min-width:110px;padding:9px 14px;font-size:.68rem}
+.copy-btn{background:none;border:1px solid var(--border);color:var(--t2);font-family:var(--mono);font-size:.67rem;letter-spacing:.1em;padding:6px 12px;cursor:pointer;transition:all .18s;border-radius:2px;white-space:nowrap}
+.copy-btn:hover{border-color:var(--g3);color:var(--g2)}
+.copy-btn.ok{border-color:var(--green);color:var(--green)}
+
+/* ── visibility toggle ── */
+.vis-toggle{display:flex;gap:8px;margin-top:12px}
+.vtab{flex:1;padding:8px;background:var(--bg3);border:1px solid var(--border);color:var(--t2);font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;cursor:pointer;transition:all .18s;border-radius:2px;text-align:center}
+.vtab.on.pub{border-color:var(--cyan);color:var(--cyan);background:rgba(0,229,255,.06)}
+.vtab.on.priv{border-color:var(--purple);color:var(--purple);background:rgba(176,102,255,.06)}
+
+/* ── message feed ── */
+.msg-list{display:flex;flex-direction:column;gap:10px}
+.msg-card{background:var(--bg2);border:1px solid var(--border);padding:16px;position:relative;transition:border-color .2s}
+.msg-card:hover{border-color:var(--g3)}
+.msg-card.pub{border-left:3px solid var(--cyan)}
+.msg-card.priv{border-left:3px solid var(--purple)}
+.msg-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.msg-owner{font-size:.68rem;color:var(--g2)}
+.msg-label{font-family:var(--disp);font-size:.72rem;color:var(--text)}
+.msg-badge{font-size:.58rem;letter-spacing:.12em;padding:2px 8px;border-radius:2px}
+.msg-badge.pub{background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.3);color:var(--cyan)}
+.msg-badge.priv{background:rgba(176,102,255,.1);border:1px solid rgba(176,102,255,.3);color:var(--purple)}
+.msg-badge.mine{background:rgba(0,255,110,.08);border:1px solid rgba(0,255,110,.25);color:var(--g2)}
+.msg-cipher{font-size:.65rem;color:var(--g3);word-break:break-all;margin-bottom:10px;line-height:1.5;max-height:60px;overflow:hidden;cursor:pointer}
+.msg-cipher.expanded{max-height:none}
+.msg-actions{display:flex;gap:8px;flex-wrap:wrap}
+.msg-time{font-size:.6rem;color:var(--g3);margin-left:auto}
+
+/* ── overlay ── */
+#overlay{display:none;position:fixed;inset:0;background:rgba(2,12,5,.96);z-index:200;align-items:center;justify-content:center;flex-direction:column;gap:20px}
+#overlay.on{display:flex}
+.ov-title{font-family:var(--disp);font-size:.95rem;letter-spacing:.35em;color:var(--green);text-shadow:0 0 28px var(--green)}
+.ov-bar{width:min(480px,90vw);height:2px;background:var(--dim);overflow:hidden}
+.ov-fill{height:100%;background:var(--green);box-shadow:0 0 8px var(--green);width:0;transition:width .35s ease}
+.ov-log{width:min(480px,90vw);font-size:.72rem;color:var(--t2);line-height:2}
+.ll{opacity:0;transform:translateX(-8px);transition:all .25s}
+.ll.on{opacity:1;transform:none}
+.ll.ok{color:var(--green)}.ll.warn{color:var(--amber)}.ll.info{color:var(--cyan)}
+
+/* ── info cards ── */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:20px}
+.card{background:var(--panel);border:1px solid var(--border);padding:12px 14px}
+.card .cl{font-size:.6rem;letter-spacing:.18em;color:var(--g3);margin-bottom:3px}
+.card .cv{font-family:var(--disp);font-size:.78rem;color:var(--green)}
+
+/* ── symbol grid ── */
+.sym-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(66px,1fr));gap:3px;max-height:180px;overflow-y:auto;padding:10px;background:var(--bg3);border:1px solid var(--border);border-radius:2px}
+.se{font-size:.67rem;color:var(--t2);padding:2px 5px;transition:color .15s;cursor:default}
+.se:hover{color:var(--g2)}.se .s{color:var(--green)}
+
+/* ── toast ── */
+#toast{position:fixed;bottom:22px;right:22px;z-index:300;padding:11px 18px;background:var(--panel);border:1px solid var(--g3);color:var(--green);font-size:.75rem;letter-spacing:.1em;transform:translateY(70px);opacity:0;transition:all .28s;pointer-events:none;max-width:320px}
+#toast.on{transform:none;opacity:1}
+#toast.err{border-color:var(--red);color:var(--red)}
+
+/* ── decode result ── */
+.decoded-box{background:var(--bg3);border:1px solid var(--g3);padding:14px;border-radius:2px;margin-top:14px;display:none}
+.decoded-box.on{display:block}
+.decoded-label{font-size:.6rem;letter-spacing:.18em;color:var(--g3);margin-bottom:6px}
+.decoded-text{font-size:.88rem;color:var(--text);line-height:1.7;word-break:break-word}
+
+/* ── empty state ── */
+.empty{text-align:center;padding:40px 20px;color:var(--g3);font-size:.8rem;letter-spacing:.12em}
+
+/* ── responsive ── */
+@media(max-width:560px){header{padding:10px 14px}.logo{font-size:.85rem}.app{padding:16px 10px}.auth-box{padding:22px 16px}}
+
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--g3)}
+::-webkit-scrollbar-thumb:hover{background:var(--g2)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">CIPHER<span>LANG</span></div>
+  <div class="hbar">
+    <div class="sdot" id="sdot"></div>
+    <span class="hstat" id="hstat">OFFLINE</span>
+    <button class="btn-sm" id="btnLogout" style="display:none" onclick="logout()">LOGOUT</button>
+  </div>
+</header>
+
+<!-- Process overlay -->
+<div id="overlay">
+  <div class="ov-title" id="ovTitle">PROCESSING</div>
+  <div class="ov-bar"><div class="ov-fill" id="ovFill"></div></div>
+  <div class="ov-log" id="ovLog"></div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<div class="app">
+
+<!-- ═══════════════ AUTH ═══════════════ -->
+<div id="vAuth">
+  <div class="auth-hero">
+    <h1>CIPHERLANG</h1>
+    <p>AES-256 · SECRET LANGUAGE · SECURE VAULT</p>
+  </div>
+  <div class="auth-box">
+    <div class="auth-tabs">
+      <button class="atab on" id="atab0" onclick="switchAuth(0)">LOGIN</button>
+      <button class="atab"    id="atab1" onclick="switchAuth(1)">REGISTER</button>
+    </div>
+
+    <div id="formLogin">
+      <div class="field"><label>USERNAME</label>
+        <input id="lUser" type="text" placeholder="your username" autocomplete="username"
+               onkeydown="if(event.key==='Enter')login()">
+      </div>
+      <div class="field"><label>PASSWORD</label>
+        <input id="lPass" type="password" placeholder="your password" autocomplete="current-password"
+               onkeydown="if(event.key==='Enter')login()">
+      </div>
+      <button class="btn" onclick="login()">[ ENTER ]</button>
+    </div>
+
+    <div id="formReg" style="display:none">
+      <div class="field"><label>USERNAME (3–32 chars)</label>
+        <input id="rUser" type="text" placeholder="choose a username" autocomplete="username"
+               onkeydown="if(event.key==='Enter')register()">
+      </div>
+      <div class="field"><label>PASSWORD (min 6 chars)</label>
+        <input id="rPass" type="password" placeholder="choose a password" autocomplete="new-password"
+               onkeydown="if(event.key==='Enter')register()">
+      </div>
+      <button class="btn" onclick="register()">[ CREATE ACCOUNT ]</button>
+    </div>
+
+    <div class="auth-err" id="authErr"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ MAIN ═══════════════ -->
+<div id="vMain" style="display:none">
+
+  <div class="cards" id="infoCards">
+    <div class="card"><div class="cl">OPERATOR</div><div class="cv" id="ciUser">—</div></div>
+    <div class="card"><div class="cl">ACTIVE KEY</div><div class="cv" id="ciKey">—</div></div>
+    <div class="card"><div class="cl">MY MESSAGES</div><div class="cv" id="ciMine">0</div></div>
+    <div class="card"><div class="cl">PUBLIC VAULT</div><div class="cv" id="ciPub">0</div></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab on" onclick="switchTab(0)">[ ENCODE ]</button>
+    <button class="tab"    onclick="switchTab(1)">[ DECODE ]</button>
+    <button class="tab"    onclick="switchTab(2)">[ VAULT ]</button>
+    <button class="tab"    onclick="switchTab(3)">[ SYSTEM ]</button>
+  </div>
+
+  <!-- ── ENCODE ── -->
+  <div class="tcontent on" id="tc0">
+    <div class="panel">
+      <div class="ptitle"><span class="ic">▶</span> COMPOSE MESSAGE</div>
+
+      <div class="plabel">MESSAGE LABEL (shown in vault)</div>
+      <input class="field" id="encLabel" type="text" placeholder="e.g. Secret note for Alice"
+             style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:.83rem;padding:9px 13px;outline:none;border-radius:2px;margin-bottom:12px;transition:border-color .18s"
+             onfocus="this.style.borderColor='var(--g3)'" onblur="this.style.borderColor='var(--border)'">
+
+      <div class="plabel">PLAINTEXT</div>
+      <textarea id="encInput" placeholder="Type your secret message here..."></textarea>
+
+      <div class="plabel" style="margin-top:14px">VISIBILITY</div>
+      <div class="vis-toggle">
+        <div class="vtab on pub" id="vt0" onclick="setVis(true)">🌐 PUBLIC — anyone on this server can see &amp; decode</div>
+        <div class="vtab priv"   id="vt1" onclick="setVis(false)">🔒 PRIVATE — only you can see &amp; decode</div>
+      </div>
+      <div style="font-size:.62rem;color:var(--g3);margin-top:6px" id="visHint">
+        Public messages are visible in the Vault to all users. The ciphertext is always encrypted — they need this server to decode it.
+      </div>
+
+      <div class="row" style="margin-top:14px">
+        <button class="btn" onclick="doEncode()">[ ENCODE &amp; SAVE ]</button>
+        <button class="btn" style="border-color:var(--border);color:var(--t2)"
+                onclick="encInput.value='';encLabel.value='';hideEncOut()">[ CLEAR ]</button>
+      </div>
+    </div>
+
+    <div class="panel" id="encOutPanel" style="display:none">
+      <div class="ptitle"><span class="ic">◆</span> CIPHERLANG OUTPUT</div>
+      <div class="plabel">ENCRYPTED SECRET LANGUAGE</div>
+      <textarea class="cipher" id="encOut" readonly></textarea>
+      <div class="row">
+        <button class="copy-btn" id="cpEncBtn" onclick="copyEl('encOut','cpEncBtn')">[ COPY CIPHERTEXT ]</button>
+        <span style="font-size:.62rem;color:var(--g3);margin-left:auto">SAVED TO VAULT ✓</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── DECODE ── -->
+  <div class="tcontent" id="tc1">
+    <div class="panel">
+      <div class="ptitle"><span class="ic">◀</span> PASTE &amp; DECODE</div>
+      <div class="plabel">PASTE CIPHERLANG TEXT</div>
+      <textarea class="cipher" id="decInput" placeholder="⟦KID...::...::...::...⟧&#10;&#10;Paste any CipherLang message here..." style="color:var(--t2)"></textarea>
+      <div class="row">
+        <button class="btn" onclick="doDecode()">[ DECODE ]</button>
+        <button class="btn" style="border-color:var(--border);color:var(--t2)"
+                onclick="decInput.value='';decOut.classList.remove('on')">[ CLEAR ]</button>
+      </div>
+      <div class="decoded-box" id="decOut">
+        <div class="decoded-label">DECRYPTED PLAINTEXT</div>
+        <div class="decoded-text" id="decText"></div>
+        <div class="row" style="margin-top:10px">
+          <button class="copy-btn" id="cpDecBtn" onclick="copyText(decText.textContent,'cpDecBtn')">[ COPY ]</button>
+          <span style="font-size:.62rem;color:var(--green);margin-left:auto">✓ AUTH TAG VERIFIED</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── VAULT ── -->
+  <div class="tcontent" id="tc2">
+    <div class="panel" style="padding:14px 22px">
+      <div class="ptitle"><span class="ic">◈</span> MESSAGE VAULT
+        <button class="btn-sm" onclick="loadMessages()" style="margin-left:auto">↺ REFRESH</button>
+      </div>
+      <div style="font-size:.68rem;color:var(--t2);margin-bottom:4px">
+        🌐 Public messages are visible to everyone on this server.<br>
+        🔒 Private messages are only visible to you.
+      </div>
+    </div>
+    <div id="msgList" class="msg-list"><div class="empty">Loading vault...</div></div>
+  </div>
+
+  <!-- ── SYSTEM ── -->
+  <div class="tcontent" id="tc3">
+    <div class="panel">
+      <div class="ptitle"><span class="ic">⚙</span> KEY ROTATION</div>
+      <p style="font-size:.77rem;color:var(--t2);line-height:1.8;margin-bottom:14px">
+        Generates a new AES-256 encryption key. Old keys are kept so existing messages can still be decoded.
+        New messages will use the new key going forward.
+      </p>
+      <button class="btn red" onclick="doRotate()" style="width:auto;padding:10px 22px">[ ROTATE KEY ]</button>
+    </div>
+
+    <div class="panel">
+      <div class="ptitle"><span class="ic">◈</span> SYMBOL TABLE</div>
+      <p style="font-size:.72rem;color:var(--t2);margin-bottom:10px">256 symbols — one per byte. Security is AES-256, not this table.</p>
+      <div class="sym-grid" id="symGrid"></div>
+    </div>
+
+    <div class="panel">
+      <div class="ptitle"><span class="ic">ⓘ</span> HOW IT WORKS</div>
+      <div style="font-size:.75rem;color:var(--t2);line-height:2">
+        <div style="color:var(--green)">// LAYER 1 — REAL SECURITY</div>
+        <div>① Plaintext → AES-256-GCM (random 96-bit IV per message)</div>
+        <div>② GCM produces ciphertext + 128-bit authentication tag</div>
+        <div>③ Key lives server-side only — never sent to browser</div>
+        <div style="color:var(--green);margin-top:8px">// LAYER 2 — SECRET LANGUAGE</div>
+        <div>④ Every byte → unique symbol (Δ/Ω/Λ/Σ/Ψ/Θ/Ξ/Γ + hex)</div>
+        <div>⑤ Random noise tokens injected → identical input ≠ identical output</div>
+        <div>⑥ Wrapped: ⟦KID&lt;id&gt;::iv::authtag::ciphertext+noise⟧</div>
+        <div style="color:var(--amber);margin-top:8px">// VISIBILITY SYSTEM</div>
+        <div>⑦ Public = stored + visible in Vault to all logged-in users</div>
+        <div>⑧ Private = stored + only you can see it in the Vault</div>
+        <div>⑨ Both require this server's key to decode — no offline decoding</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /vMain -->
+</div><!-- /app -->
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+let TOKEN = localStorage.getItem('cl_tok') || '';
+let ME    = localStorage.getItem('cl_me')  || '';
+let IS_PUBLIC = true;
+
+// ── Startup ────────────────────────────────────────────────────────────────
+(async () => {
+  if (TOKEN) {
+    const ok = await fetchStatus();
+    if (ok) { showMain(); return; }
+  }
+  showAuth();
+})();
+
+// ── API helper ─────────────────────────────────────────────────────────────
+async function api(path, body) {
+  const opts = { method: body !== undefined ? 'POST' : 'GET',
+                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` } };
+  if (body !== undefined) opts.body = JSON.stringify(body);
+  const r = await fetch(path, opts);
+  return r.json();
+}
+
+// ── Auth ───────────────────────────────────────────────────────────────────
+function switchAuth(i) {
+  document.getElementById('atab0').classList.toggle('on', i === 0);
+  document.getElementById('atab1').classList.toggle('on', i === 1);
+  document.getElementById('formLogin').style.display = i === 0 ? '' : 'none';
+  document.getElementById('formReg').style.display   = i === 1 ? '' : 'none';
+  document.getElementById('authErr').textContent = '';
+}
+
+async function login() {
+  const u = id('lUser').value.trim(), p = id('lPass').value;
+  id('authErr').textContent = '';
+  if (!u || !p) { id('authErr').textContent = 'Fill in both fields.'; return; }
+  try {
+    const r = await api('/api/login', { username: u, password: p });
+    if (r.error) { id('authErr').textContent = r.error; return; }
+    saveAuth(r); showMain();
+  } catch { id('authErr').textContent = 'Could not reach server.'; }
+}
+
+async function register() {
+  const u = id('rUser').value.trim(), p = id('rPass').value;
+  id('authErr').textContent = '';
+  if (!u || !p) { id('authErr').textContent = 'Fill in both fields.'; return; }
+  try {
+    const r = await api('/api/register', { username: u, password: p });
+    if (r.error) { id('authErr').textContent = r.error; return; }
+    saveAuth(r); showMain();
+  } catch { id('authErr').textContent = 'Could not reach server.'; }
+}
+
+function saveAuth(r) {
+  TOKEN = r.token; ME = r.username;
+  localStorage.setItem('cl_tok', TOKEN);
+  localStorage.setItem('cl_me',  ME);
+}
+
+function logout() {
+  TOKEN = ''; ME = '';
+  localStorage.removeItem('cl_tok'); localStorage.removeItem('cl_me');
+  id('sdot').classList.remove('on');
+  id('hstat').textContent = 'OFFLINE';
+  id('btnLogout').style.display = 'none';
+  id('vMain').style.display = 'none';
+  id('vAuth').style.display = '';
+}
+
+// ── Status ─────────────────────────────────────────────────────────────────
+async function fetchStatus() {
+  try {
+    const r = await api('/api/status');
+    if (r.error) return false;
+    id('ciUser').textContent = r.display || r.username;
+    id('ciKey').textContent  = r.activeKeyId;
+    id('ciMine').textContent = r.myMessages;
+    id('btnLogout').textContent = (r.display || r.username).toUpperCase();
+    return true;
+  } catch { return false; }
+}
+
+// ── Visibility toggle ──────────────────────────────────────────────────────
+function setVis(pub) {
+  IS_PUBLIC = pub;
+  id('vt0').classList.toggle('on', pub);
+  id('vt1').classList.toggle('on', !pub);
+  id('visHint').textContent = pub
+    ? 'Public: all logged-in users see this in the Vault. Still AES-256 encrypted — server key required to decode.'
+    : 'Private: only you can see this message in the Vault. Invisible to everyone else.';
+}
+
+// ── Encode ─────────────────────────────────────────────────────────────────
+async function doEncode() {
+  const msg   = id('encInput').value.trim();
+  const label = id('encLabel').value.trim() || 'Untitled';
+  if (!msg) { toast('Enter a message to encode.', true); return; }
+
+  await animate('ENCODING', [
+    { t:'> Preparing plaintext buffer...',    c:'info' },
+    { t:'> Generating random 96-bit IV...',   c:'info' },
+    { t:'> AES-256-GCM encryption...',        c:'warn' },
+    { t:'> Computing 128-bit auth tag...',    c:'warn' },
+    { t:'> Mapping bytes → symbols...',       c:'info' },
+    { t:'> Injecting noise tokens...',        c:'info' },
+    { t:'> Saving to vault...',               c:'info' },
+    { t:'✓ Done',                             c:'ok'   },
+  ], async () => {
+    const r = await api('/api/encode', { message: msg, label, isPublic: IS_PUBLIC });
+    if (r.error) throw new Error(r.error);
+    return r;
+  }, r => {
+    id('encOut').value = r.encoded;
+    id('encOutPanel').style.display = '';
+    loadMessages();
+    fetchStatus();
+    toast(IS_PUBLIC ? 'Encoded & saved as PUBLIC' : 'Encoded & saved as PRIVATE');
+  });
+}
+
+function hideEncOut() { id('encOutPanel').style.display = 'none'; }
+
+// ── Decode ─────────────────────────────────────────────────────────────────
+async function doDecode(prefill) {
+  if (prefill) { switchTab(1); id('decInput').value = prefill; }
+  const enc = id('decInput').value.trim();
+  if (!enc) { toast('Paste a CipherLang message first.', true); return; }
+
+  await animate('DECODING', [
+    { t:'> Parsing envelope...',              c:'info' },
+    { t:'> Resolving key ID...',              c:'info' },
+    { t:'> Stripping noise tokens...',        c:'info' },
+    { t:'> Reconstructing cipher bytes...',   c:'warn' },
+    { t:'> AES-256-GCM decryption...',        c:'warn' },
+    { t:'> Verifying auth tag...',            c:'warn' },
+    { t:'✓ Authenticated & decrypted',        c:'ok'   },
+  ], async () => {
+    const r = await api('/api/decode', { encoded: enc });
+    if (r.error) throw new Error(r.error);
+    return r;
+  }, r => {
+    id('decText').textContent = r.message;
+    id('decOut').classList.add('on');
+    toast('Message decoded successfully');
+  });
+}
+
+// ── Vault / Messages ────────────────────────────────────────────────────────
+async function loadMessages() {
+  try {
+    const r = await api('/api/messages');
+    if (r.error) { id('msgList').innerHTML = `<div class="empty">${r.error}</div>`; return; }
+    renderMessages(r.messages);
+    // update pub count
+    const pubCount = r.messages.filter(m => m.isPublic).length;
+    id('ciPub').textContent = pubCount;
+  } catch { id('msgList').innerHTML = '<div class="empty">Could not load vault.</div>'; }
+}
+
+function renderMessages(msgs) {
+  const list = id('msgList');
+  if (!msgs.length) { list.innerHTML = '<div class="empty">// VAULT EMPTY — encode your first message above</div>'; return; }
+  list.innerHTML = msgs.map(m => `
+  <div class="msg-card ${m.isPublic ? 'pub' : 'priv'}" id="mc${m.id}">
+    <div class="msg-meta">
+      <span class="msg-badge ${m.isPublic ? 'pub' : 'priv'}">${m.isPublic ? '🌐 PUBLIC' : '🔒 PRIVATE'}</span>
+      ${m.mine ? '<span class="msg-badge mine">MINE</span>' : ''}
+      <span class="msg-label">${esc(m.label)}</span>
+      <span class="msg-owner">by ${esc(m.owner)}</span>
+      <span class="msg-time">${timeAgo(m.createdAt)}</span>
+    </div>
+    <div class="msg-cipher" id="mc-ct${m.id}" onclick="toggleExpand(${m.id})"
+         title="Click to expand">${esc(m.encoded.slice(0,120))}…</div>
+    <div class="msg-actions">
+      <button class="copy-btn" onclick="copyText(${JSON.stringify(m.encoded)}, 'cp${m.id}')">[ COPY CIPHER ]</button>
+      <button class="copy-btn" onclick="doDecode(${JSON.stringify(m.encoded)}); switchTab(1)">[ DECODE ]</button>
+      ${m.mine ? `<button class="copy-btn" style="color:var(--red);border-color:#441020" onclick="deleteMsg(${m.id})">[ DELETE ]</button>` : ''}
+    </div>
+  </div>`).join('');
+}
+
+function toggleExpand(id_) {
+  const el = id(`mc-ct${id_}`);
+  el.classList.toggle('expanded');
+  if (el.classList.contains('expanded')) el.textContent = document.getElementById(`mc${id_}`).querySelector('.msg-cipher').dataset.full || el.textContent;
+}
+
+async function deleteMsg(msgId) {
+  if (!confirm('Delete this message?')) return;
+  const r = await api(`/api/messages/${msgId}`, null);
+  if (r && r.ok) { loadMessages(); fetchStatus(); toast('Message deleted'); }
+  else toast('Could not delete', true);
+}
+
+// ── Key rotation ────────────────────────────────────────────────────────────
+async function doRotate() {
+  if (!confirm('Rotate the encryption key? Existing messages remain decodable.')) return;
+  const r = await api('/api/rotate-key', {});
+  if (r.error) { toast(r.error, true); return; }
+  id('ciKey').textContent = r.newKeyId;
+  toast('Key rotated → ' + r.newKeyId);
+  fetchStatus();
+}
+
+// ── Symbol table ────────────────────────────────────────────────────────────
+function buildSymGrid() {
+  const g = id('symGrid'); if (g.children.length) return;
+  const pre = ['Δ','Ω','Λ','Σ','Ψ','Θ','Ξ','Γ'];
+  for (let i = 0; i < 256; i++) {
+    const p = pre[i % 8];
+    const s = p + Math.floor(i/16).toString(16).toUpperCase() + (i%16).toString(16).toUpperCase();
+    const d = document.createElement('div'); d.className = 'se';
+    d.innerHTML = `<span class="s">${s}</span> <span style="color:var(--g3)">${i}</span>`;
+    g.appendChild(d);
+  }
+}
+
+// ── Overlay animation ────────────────────────────────────────────────────────
+async function animate(title, steps, apiFn, onDone) {
+  const ov = id('overlay'), log = id('ovLog'), fill = id('ovFill');
+  id('ovTitle').textContent = title;
+  log.innerHTML = ''; fill.style.width = '0%';
+  ov.classList.add('on');
+
+  const lines = steps.map(s => {
+    const d = document.createElement('div'); d.className = `ll ${s.c}`; d.textContent = s.t;
+    log.appendChild(d); return d;
+  });
+
+  let result, err;
+  const promise = apiFn().then(r => result = r).catch(e => err = e);
+  const delay = ms => new Promise(r => setTimeout(r, ms));
+
+  for (let i = 0; i < lines.length - 1; i++) {
+    await delay(160); lines[i].classList.add('on');
+    fill.style.width = `${((i+1)/steps.length)*80}%`;
+  }
+  await promise;
+
+  if (err) { ov.classList.remove('on'); toast(err.message || 'Operation failed', true); return; }
+  lines[lines.length-1].classList.add('on'); fill.style.width = '100%';
+  await delay(380); ov.classList.remove('on');
+  onDone(result);
+}
+
+// ── UI helpers ───────────────────────────────────────────────────────────────
+function showAuth() { id('vAuth').style.display=''; id('vMain').style.display='none'; }
+function showMain() {
+  id('vAuth').style.display='none'; id('vMain').style.display='';
+  id('sdot').classList.add('on'); id('hstat').textContent='SECURE';
+  id('btnLogout').style.display='';
+  fetchStatus(); loadMessages(); buildSymGrid();
+}
+
+function switchTab(i) {
+  document.querySelectorAll('.tab').forEach((b,j)=>b.classList.toggle('on',j===i));
+  document.querySelectorAll('.tcontent').forEach((c,j)=>c.classList.toggle('on',j===i));
+  if (i===2) loadMessages();
+}
+
+async function copyEl(elId, btnId) {
+  await copyText(id(elId).value, btnId);
+}
+async function copyText(text, btnId) {
+  if (!text) return;
+  try {
+    await navigator.clipboard.writeText(text);
+    if (btnId) {
+      const b = typeof btnId === 'string' ? id(btnId) : document.querySelector(`[onclick*="${btnId}"]`);
+      if (b) { const orig = b.textContent; b.textContent='[ COPIED ✓ ]'; b.classList.add('ok'); setTimeout(()=>{b.textContent=orig;b.classList.remove('ok')},2000); }
+    }
+  } catch { toast('Copy failed',true); }
+}
+
+let _toastTimer;
+function toast(msg, err=false) {
+  const t = id('toast');
+  t.textContent = err ? `✗ ${msg}` : `✓ ${msg}`;
+  t.className = 'on' + (err?' err':'');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(()=>t.className='', 3200);
+}
+
+function id(x) { return document.getElementById(x); }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function timeAgo(ts) {
+  const d = Date.now() - ts, s=Math.floor(d/1000), m=Math.floor(s/60), h=Math.floor(m/60), day=Math.floor(h/24);
+  if (s<60) return 'just now'; if (m<60) return `${m}m ago`; if (h<24) return `${h}h ago`; return `${day}d ago`;
+}
+</script>
+</body>
+</html>

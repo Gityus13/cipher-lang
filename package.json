@@ -1,0 +1,13 @@
+{
+  "name": "cipher-lang",
+  "version": "2.0.0",
+  "description": "AES-256 encrypted secret language system — zero dependencies",
+  "private": true,
+  "scripts": {
+    "start": "node server/index.js",
+    "dev":   "node --watch server/index.js",
+    "setup": "node scripts/setup.js"
+  },
+  "engines": { "node": ">=18.0.0" },
+  "license": "MIT"
+}
